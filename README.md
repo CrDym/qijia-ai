@@ -29,6 +29,7 @@
 | 文件导入 | 拖拽或选择 PDF、Word、TXT、Markdown，提取文字后可编辑 |
 | 图片识别 | 上传 JPG、PNG、WebP，预览原图，使用 AI 识别文字并核对草稿 |
 | AI 辅助整理 | 提炼标题、摘要和标签；严格 JSON Schema 输出与服务端校验 |
+| AI 设置 | 页面配置 OpenAI 密钥与模型，保存立即生效，支持主动测试连接 |
 | 家庭健康 | 建立成员档案，记录过敏史、既往病史，按成员与日期管理病历、报告和处方 |
 | 原件保留 | 文件与资料一同保存，支持下载、替换和移除附件 |
 | 本地存储 | SQLite 持久保存；无需单独运行数据库服务 |
@@ -58,7 +59,9 @@ git clone https://github.com/CrDym/qijia-ai.git
 
 ### 配置 AI（可选）
 
-在 `.env.local` 中填写，修改后重启服务：
+进入页面导航中的 **AI 设置**（`/settings`），填写 OpenAI API Key 和模型，点击“保存配置”即可生效。已有密钥不回显，留空表示保留；“测试连接”只发送固定文字，会产生少量 API 用量。测试验证文字与结构化输出，不代表图片识别效果。
+
+也可在 `.env.local` 中填写，修改环境变量后重启服务：
 
 ```dotenv
 OPENAI_API_KEY=你的_OpenAI_API_Key
@@ -68,11 +71,13 @@ DATABASE_PATH=./data/family.sqlite
 
 | 环境变量 | 说明 |
 | --- | --- |
-| `OPENAI_API_KEY` | 启用 AI 时必填，仅在服务端读取 |
+| `OPENAI_API_KEY` | 可选，未在页面保存密钥时作为回退，仅在服务端读取 |
 | `OPENAI_MODEL` | 默认 `gpt-4.1-mini`；需支持图片输入、Responses API 和结构化输出 |
 | `DATABASE_PATH` | 可选，默认 `./data/family.sqlite`；部署时应指向持久磁盘 |
 
 请勿为密钥添加 `NEXT_PUBLIC_` 前缀，也不要提交 `.env.local`。完整配置示例见 [`.env.example`](.env.example)。
+
+页面保存的配置优先于环境变量；“恢复环境配置”清除页面设置，重新使用环境变量。页面密钥保存在服务端 SQLite 中，当前未加密，数据库备份会包含密钥；不回传到页面，也不写入浏览器存储。当前没有登录保护，能访问平台的人也能修改设置。
 
 ## 开始使用
 

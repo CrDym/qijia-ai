@@ -48,6 +48,11 @@ export function openDatabase(path: string): DatabaseSync {
       details TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS health_records_member ON health_records(member_id);
+    CREATE TABLE IF NOT EXISTS ai_settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      api_key TEXT NOT NULL DEFAULT '',
+      model TEXT NOT NULL
+    );
   `);
   return db;
 }
@@ -59,10 +64,12 @@ const globalDb = globalThis as typeof globalThis & {
 export function getDatabase(): DatabaseSync {
   // 数据库是运行时的可写数据，不能被打包器当成静态依赖扫描。
   globalDb.familyDatabase ??= openDatabase(
-    resolve(
-      /* turbopackIgnore: true */ process.env.DATABASE_PATH ||
-        "./data/family.sqlite",
-    ),
+    process.env.DATABASE_PATH === ":memory:"
+      ? ":memory:"
+      : resolve(
+          /* turbopackIgnore: true */ process.env.DATABASE_PATH ||
+            "./data/family.sqlite",
+        ),
   );
   return globalDb.familyDatabase;
 }

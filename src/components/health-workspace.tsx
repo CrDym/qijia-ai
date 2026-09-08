@@ -145,6 +145,10 @@ export function HealthWorkspace({ aiConfigured }: { aiConfigured: boolean }) {
             <Icon name="heart" />
             <span>家庭健康</span>
           </Link>
+          <Link className="nav-item" href="/settings">
+            <Icon name="settings" />
+            <span>AI 设置</span>
+          </Link>
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-note">
@@ -174,6 +178,7 @@ export function HealthWorkspace({ aiConfigured }: { aiConfigured: boolean }) {
             <Link href="/health" aria-current="page">
               家庭健康 <Icon name="heart" size={14} />
             </Link>
+            <Link href="/settings">AI 设置</Link>
           </div>
           <section className="page-heading">
             <div>

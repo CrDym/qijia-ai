@@ -22,6 +22,8 @@ import { organizeHealth } from "../src/services/ai/organize-health.ts";
 import { runExclusiveAI } from "../src/services/ai/run-exclusive.ts";
 import { readDocumentWrite } from "../src/services/files/read-upload.ts";
 
+process.env.DATABASE_PATH = ":memory:";
+
 async function imageFixture(format: "png" | "jpeg" | "webp" = "png") {
   return sharp({
     create: { width: 120, height: 90, channels: 3, background: "#edf3e5" },

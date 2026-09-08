@@ -39,11 +39,24 @@ npm run dev
 
 | 变量             | 必填           | 说明                                                                     |
 | ---------------- | -------------- | ------------------------------------------------------------------------ |
-| `OPENAI_API_KEY` | 启用 AI 时必填 | OpenAI API Key，仅服务端读取                                             |
+| `OPENAI_API_KEY` | 否 | 未在页面保存密钥时作为回退，仅服务端读取                                             |
 | `OPENAI_MODEL`   | 否             | 默认 `gpt-4.1-mini`，需支持图片输入、Responses API 与 Structured Outputs |
 | `DATABASE_PATH`  | 否             | 默认 `./data/family.sqlite`，相对路径基于项目运行目录                    |
 
 不要给密钥添加 `NEXT_PUBLIC_` 前缀。`.env.local`、数据库及其 WAL/SHM 文件已加入 Git 忽略规则。
+
+### 页面配置 AI
+
+资料库和家庭健康页面均提供“AI 设置”入口（`/settings`），桌面和手机都可访问。
+
+1. 填写 OpenAI API Key 和模型，点击“保存配置”。下一次 AI 请求立即使用新配置，无需重启。保存不会自动调用 AI。
+2. 已有密钥不会回显，输入框留空保留已有密钥；输入新值可替换。密钥和模型分别优先使用页面保存值，否则读取环境变量；模型最终默认 `gpt-4.1-mini`。环境密钥不会因页面保存而复制到数据库。
+3. 保存后点击“测试连接”。测试使用已生效的配置，仅发送固定测试文字，不发送家庭或健康资料；会产生少量 API 用量。通过测试表示文字和严格结构化输出可用，图片能力和识别准确率需实际核对。未保存修改时不可测试，避免误测旧配置。
+4. “恢复环境配置”在确认后清除页面保存的密钥和模型，不修改 `.env.local`。环境变量没有密钥时，AI 功能恢复未配置状态。此操作不删除家庭资料。
+
+配置保存在服务端 SQLite 的 `ai_settings` 表中，已有数据库自动建表，无需清空。密钥仅在输入提交时传到本站服务端，之后不通过页面或查询接口回传，不进入浏览器持久存储。当前没有应用层加密和登录保护，请保护数据库及备份，不要将服务公开到公网；可访问应用的人也可以修改 AI 配置。恢复环境配置是逻辑删除，不保证从历史备份或磁盘中安全擦除旧密钥。
+
+相关接口：`GET /api/settings/ai` 只返回配置状态、模型、密钥来源和是否有页面设置；`PUT` 保存配置，`DELETE` 恢复环境配置；`POST /api/settings/ai/test` 测试当前配置。写入和测试检查请求来源，所有配置响应禁止缓存，错误不暴露密钥或供应商原始响应。
 
 AI 使用 OpenAI Responses API 和严格 JSON Schema，再使用 Zod 校验返回值；同一份 Zod schema 同时定义数据类型和输出约束。服务端设置 45 秒超时、关闭自动重试；普通整理、健康整理、图片解析分别最多输出 1,600、5,000、8,000 token。处理拒答、限流、配置错误、截断及格式异常，各入口共享单进程并发保护。
 
@@ -104,7 +117,7 @@ npm start
 
 最简单的备份方式：**先停止应用**，再复制整个 `data/` 目录到安全位置；使用自定义路径时备份数据库所在目录。恢复时停止应用并恢复对应目录。SQLite 开启 WAL 模式，不要在服务运行时只复制 `.sqlite` 主文件，否则可能遗漏尚在 WAL 中的写入。删除在应用内不可撤销，可以通过已有备份恢复。
 
-原文件保存在同一个 SQLite 数据库中，以上备份会包含附件，无需另外备份上传目录。附件较多时，数据库和备份体积也会随之增大。
+原文件保存在同一个 SQLite 数据库中，以上备份会包含附件和页面保存的 AI 密钥，无需另外备份上传目录。请勿公开、提交或分享此备份。附件较多时，数据库和备份体积也会随之增大。
 
 ## 代码结构
 
@@ -118,6 +131,8 @@ src/
     api/health/members/        # 成员档案管理
     api/health/organize/       # 健康原文的结构化整理
     api/organize/              # AI 整理入口
+    api/settings/ai/           # AI 配置状态、保存、恢复及 test/ 连接测试
+    settings/page.tsx          # AI 设置入口
     health/page.tsx            # 家庭健康入口
     page.tsx                  # 服务端页面，仅传递 AI 是否配置的布尔状态
     layout.tsx / globals.css
@@ -127,6 +142,7 @@ src/
     file-import.tsx           # 文件选择、拖拽与覆盖提醒
     image-analysis.tsx        # 原图预览、识别草稿与采用确认
     health-workspace.tsx      # 成员、健康概况与记录时间线
+    ai-settings-workspace.tsx # AI 配置表单和主动连接测试
     member-dialog.tsx         # 成员档案编辑与删除保护
     health-record-fields.tsx  # 健康字段编辑和详情
     categories.ts / icon.tsx
@@ -134,8 +150,10 @@ src/
   schemas/attachment.ts       # 文件类型、大小限制与元数据
   schemas/health.ts           # 成员、健康记录与健康 AI 输出契约
   schemas/image.ts            # 图片 AI 输出契约
+  schemas/ai-settings.ts      # AI 设置输入与公开状态契约
   repositories/documents.ts   # SQLite 查询与持久化
   repositories/members.ts     # 成员持久化与删除约束
+  repositories/ai-settings.ts # 服务端密钥和模型持久化
   lib/database.ts             # 数据库连接与首次建表
   lib/api.ts / client.ts      # 请求校验、错误响应与客户端请求
   services/ai/
@@ -144,6 +162,8 @@ src/
     organize-health.ts       # 健康资料整理
     run-exclusive.ts         # 各 AI 入口共享的单进程并发保护
     openai.ts                # 当前唯一的 Provider 适配
+    configuration.ts         # 页面配置优先、环境变量回退与无密钥状态输出
+    test-connection.ts       # 固定文字的结构化连接测试
   services/files/
     extract-text.ts          # PDF/Word/文字提取
     validate-file.ts         # 文件内容与容器校验
@@ -151,6 +171,7 @@ src/
 tests/documents.test.ts
 tests/files.test.ts
 tests/health-images.test.ts
+tests/ai-settings.test.ts     # 配置持久化、来源回退、防泄漏和模拟连接测试
 ```
 
 替换 AI Provider 时，保留三个 AI 业务入口的返回契约，替换 `services/ai/openai.ts` 的适配实现；图片预处理、业务提示词、前端和资料接口可保留。今后调整持久化只需从 repository 层开始。当前数据库变更仅为幂等建表；未来涉及已有列的数据变换时，再引入版本化迁移。

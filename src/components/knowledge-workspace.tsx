@@ -145,6 +145,10 @@ export function KnowledgeWorkspace({
           我的家庭<span className="home-label-badge">个人空间</span>
         </div>
         <nav aria-label="资料分类">
+          <Link className="nav-item" href="/settings">
+            <Icon name="settings" />
+            <span>AI 设置</span>
+          </Link>
           <Link className="nav-item" href="/health">
             <Icon name="heart" />
             <span>家庭健康</span>
@@ -214,6 +218,7 @@ export function KnowledgeWorkspace({
             <Link href="/health">
               家庭健康 <Icon name="heart" size={14} />
             </Link>
+            <Link href="/settings">AI 设置</Link>
           </div>
           <section className="page-heading">
             <div>

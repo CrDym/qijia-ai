@@ -9,6 +9,9 @@ import { documentSchema, organizationSchema } from "../src/schemas/document.ts";
 import { AppError, errorResponse, readJson } from "../src/lib/api.ts";
 import { organizeDocument } from "../src/services/ai/organize-document.ts";
 
+// AI 配置读取使用隔离数据库，不接触本机家庭资料与密钥。
+process.env.DATABASE_PATH = ":memory:";
+
 test("资料保存到磁盘后可重新打开，编辑保留创建时间，删除准确返回结果", () => {
   const directory = mkdtempSync(join(tmpdir(), "family-library-test-"));
   const path = join(directory, "test.sqlite");
