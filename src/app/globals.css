@@ -971,7 +971,7 @@ label > span:not(.optional) {
   color: #9da88e;
   margin-left: 3px;
 }
-.document-form input,
+.document-form input:not([type="file"]),
 .document-form textarea,
 .document-form select {
   width: 100%;
@@ -1048,6 +1048,12 @@ label > span:not(.optional) {
   margin-top: 24px;
   padding-top: 22px;
   border-top: 1px solid var(--border);
+}
+.health-record-basics {
+  margin-bottom: 24px;
+}
+.health-tags-row {
+  margin-bottom: 19px;
 }
 .health-section-heading,
 .section-heading {

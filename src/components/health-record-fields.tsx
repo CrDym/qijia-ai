@@ -16,15 +16,17 @@ export const HEALTH_TEXT_FIELDS = [
   ["followUp", "原文医嘱 / 复诊安排", 2000],
 ] as const;
 
-export function HealthRecordFields({
-  value,
-  onChange,
-  disabled,
-}: {
+type HealthFieldProps = {
   value: HealthRecord;
   onChange: (value: HealthRecord) => void;
   disabled: boolean;
-}) {
+};
+
+export function HealthRecordBasics({
+  value,
+  onChange,
+  disabled,
+}: HealthFieldProps) {
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -44,10 +46,14 @@ export function HealthRecordFields({
     return () => controller.abort();
   }, [revision]);
   return (
-    <fieldset className="health-record-fields" disabled={disabled}>
+    <fieldset
+      className="health-record-basics"
+      aria-label="健康记录基本信息"
+      disabled={disabled}
+    >
       <div className="health-section-heading">
-        <h3>健康记录</h3>
-        <span>原文未提供的信息可以留空</span>
+        <h3>记录信息</h3>
+        <span>归档到家庭健康</span>
       </div>
       <div className="health-field-grid">
         <div className="field">
@@ -98,6 +104,18 @@ export function HealthRecordFields({
             }
           />
         </div>
+        <div className="field">
+          <label htmlFor="health-hospital">就诊 / 检查机构</label>
+          <input
+            id="health-hospital"
+            maxLength={100}
+            value={value.hospital}
+            placeholder="例如：社区医院，未提供可留空"
+            onChange={(event) =>
+              onChange({ ...value, hospital: event.target.value })
+            }
+          />
+        </div>
       </div>
       {error && (
         <p className="inline-error" role="alert">
@@ -131,19 +149,29 @@ export function HealthRecordFields({
           。
         </p>
       )}
-      {HEALTH_TEXT_FIELDS.map(([key, label, max]) => (
-        <div className="field" key={key}>
-          <label htmlFor={`health-${key}`}>{label}</label>
-          {key === "hospital" ? (
-            <input
-              id={`health-${key}`}
-              value={value[key]}
-              maxLength={max}
-              onChange={(event) =>
-                onChange({ ...value, [key]: event.target.value })
-              }
-            />
-          ) : (
+    </fieldset>
+  );
+}
+
+export function HealthRecordFields({
+  value,
+  onChange,
+  disabled,
+}: HealthFieldProps) {
+  return (
+    <fieldset
+      className="health-record-fields"
+      aria-label="原文健康信息"
+      disabled={disabled}
+    >
+      <div className="health-section-heading">
+        <h3>原文健康信息</h3>
+        <span>选填，原文未提供的信息可以留空</span>
+      </div>
+      {HEALTH_TEXT_FIELDS.filter(([key]) => key !== "hospital").map(
+        ([key, label, max]) => (
+          <div className="field" key={key}>
+            <label htmlFor={`health-${key}`}>{label}</label>
             <textarea
               id={`health-${key}`}
               rows={2}
@@ -154,9 +182,9 @@ export function HealthRecordFields({
                 onChange({ ...value, [key]: event.target.value })
               }
             />
-          )}
-        </div>
-      ))}
+          </div>
+        ),
+      )}
     </fieldset>
   );
 }

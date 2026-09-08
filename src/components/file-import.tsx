@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/client";
 import { Icon } from "./icon";
 
 type Props = {
+  purpose?: "document" | "health";
   attachment: AttachmentMeta | null;
   disabled: boolean;
   hasContent: boolean;
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export function FileImport({
+  purpose = "document",
   attachment,
   disabled,
   hasContent,
@@ -169,7 +171,9 @@ export function FileImport({
               ? "正在读取文件…"
               : attachment
                 ? "可以替换文件，也可以继续编辑正文"
-                : "把文件拖到这里，轻松收进资料库"}
+                : purpose === "health"
+                  ? "上传病历、检查报告或处方原件"
+                  : "把文件拖到这里，轻松收进资料库"}
           </h3>
           <p>JPG / PNG / WebP、PDF、Word、TXT、Markdown · 单个不超过 10 MB</p>
         </div>

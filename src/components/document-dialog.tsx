@@ -20,6 +20,7 @@ import {
 import { emptyHealthRecord, type HealthOrganization } from "@/schemas/health";
 import {
   HealthRecordFields,
+  HealthRecordBasics,
   HealthRecordDetails,
   HEALTH_TEXT_FIELDS,
 } from "./health-record-fields";
@@ -62,6 +63,8 @@ function fullDate(date: string) {
 export function DocumentDialog(props: Props) {
   const [baseline] = useState(() => initialDraft(props));
   const [draft, setDraft] = useState<DocumentInput>(baseline);
+  const isHealthRecord = Boolean(draft.health);
+  const recordLabel = isHealthRecord ? "健康记录" : "资料";
   const [tagsText, setTagsText] = useState(baseline.tags.join("，"));
   const [editing, setEditing] = useState(props.mode === "create");
   const [saving, setSaving] = useState(false);
@@ -214,7 +217,9 @@ export function DocumentDialog(props: Props) {
     }));
     setNotice(
       result.content
-        ? "文件文字已填入正文，请核对内容和分类后保存。原文件会一起保留。"
+        ? isHealthRecord
+          ? "文件文字已填入病历原文，请核对所属成员、日期和内容后保存。原文件会一起保留。"
+          : "文件文字已填入正文，请核对内容和分类后保存。原文件会一起保留。"
         : "已选择原文件，请填写或核对正文后保存。",
     );
   }
@@ -252,8 +257,10 @@ export function DocumentDialog(props: Props) {
       );
       props.onChanged(
         props.mode === "view"
-          ? "资料已更新"
-          : "资料已收藏，下次需要时一搜就有。",
+          ? `${recordLabel}已更新`
+          : isHealthRecord
+            ? "健康记录已保存"
+            : "资料已收藏，下次需要时一搜就有。",
       );
     } catch (error) {
       setError(error instanceof Error ? error.message : "保存失败，请重试");
@@ -270,7 +277,7 @@ export function DocumentDialog(props: Props) {
       await apiRequest(`/api/documents/${props.document.id}`, {
         method: "DELETE",
       });
-      props.onChanged("资料已删除");
+      props.onChanged(`${recordLabel}已删除`);
     } catch (error) {
       setError(error instanceof Error ? error.message : "删除失败，请重试");
     } finally {
@@ -283,7 +290,7 @@ export function DocumentDialog(props: Props) {
   return (
     <dialog
       ref={dialogRef}
-      className="document-dialog"
+      className={`document-dialog${isHealthRecord ? " health-document-dialog" : ""}`}
       aria-labelledby="dialog-title"
       onCancel={(event) => {
         event.preventDefault();
@@ -304,18 +311,22 @@ export function DocumentDialog(props: Props) {
     >
       <div className="dialog-header">
         <div>
-          <span className="dialog-eyebrow">YOUR FAMILY LIBRARY</span>
+          <span className="dialog-eyebrow">
+            {isHealthRecord ? "YOUR FAMILY HEALTH" : "YOUR FAMILY LIBRARY"}
+          </span>
           <h2 id="dialog-title">
             {editing
               ? props.mode === "create"
-                ? "收藏一条新资料"
-                : "编辑资料"
-              : "资料详情"}
+                ? isHealthRecord
+                  ? "新增健康记录"
+                  : "收藏一条新资料"
+                : `编辑${recordLabel}`
+              : `${recordLabel}详情`}
           </h2>
         </div>
         <button
           className="icon-button"
-          aria-label="关闭资料面板"
+          aria-label={`关闭${recordLabel}面板`}
           onClick={requestClose}
           disabled={busy}
         >
@@ -346,9 +357,19 @@ export function DocumentDialog(props: Props) {
         <form onSubmit={save} className="document-form">
           <div className="dialog-body">
             <p className="form-intro">
-              上传一份文件，或直接留下文字。每一条小记录，都可能帮上未来的你。
+              {isHealthRecord
+                ? "先确认所属家人和记录信息，再上传病历、检查报告或处方，也可以手动录入原文。"
+                : "上传一份文件，或直接留下文字。每一条小记录，都可能帮上未来的你。"}
             </p>
+            {draft.health && (
+              <HealthRecordBasics
+                value={draft.health}
+                onChange={(value) => update("health", value)}
+                disabled={busy}
+              />
+            )}
             <FileImport
+              purpose={isHealthRecord ? "health" : "document"}
               attachment={currentAttachment}
               disabled={busy}
               hasContent={Boolean(draft.content.trim())}
@@ -394,7 +415,7 @@ export function DocumentDialog(props: Props) {
             <fieldset disabled={busy}>
               <div className="field-label">
                 <label htmlFor="doc-content">
-                  正文 <span>*</span>
+                  {isHealthRecord ? "病历 / 报告原文" : "正文"} <span>*</span>
                 </label>
                 <span>{draft.content.length.toLocaleString()} / 20,000</span>
               </div>
@@ -405,7 +426,11 @@ export function DocumentDialog(props: Props) {
                 maxLength={20000}
                 className="content-input"
                 rows={7}
-                placeholder="粘贴聊天里的一段信息，或写下今天值得记住的经验…"
+                placeholder={
+                  isHealthRecord
+                    ? "粘贴病历、检查报告或处方原文，也可上传文件提取或用 AI 识别图片。请保留原始数值、单位与用药说明。"
+                    : "粘贴聊天里的一段信息，或写下今天值得记住的经验…"
+                }
                 value={draft.content}
                 onChange={(event) => update("content", event.target.value)}
               />
@@ -577,48 +602,59 @@ export function DocumentDialog(props: Props) {
             <fieldset disabled={busy} className="metadata-fields">
               <div className="field">
                 <label htmlFor="doc-title">
-                  标题 <span>*</span>
+                  {isHealthRecord ? "记录标题" : "标题"} <span>*</span>
                 </label>
                 <input
                   id="doc-title"
                   required
                   maxLength={100}
-                  placeholder="取一个下次容易找到的标题"
+                  placeholder={
+                    isHealthRecord
+                      ? "例如：9 月门诊复查、年度体检报告"
+                      : "取一个下次容易找到的标题"
+                  }
                   value={draft.title}
                   onChange={(event) => update("title", event.target.value)}
                 />
               </div>
               <div className="field">
                 <label htmlFor="doc-summary">
-                  摘要 <span className="optional">选填</span>
+                  {isHealthRecord ? "记录摘要" : "摘要"}{" "}
+                  <span className="optional">选填</span>
                 </label>
                 <textarea
                   id="doc-summary"
                   rows={3}
                   maxLength={500}
-                  placeholder="用几句话留下重点"
+                  placeholder={
+                    isHealthRecord
+                      ? "简要记录本次就诊或检查的原文要点"
+                      : "用几句话留下重点"
+                  }
                   value={draft.summary}
                   onChange={(event) => update("summary", event.target.value)}
                 />
               </div>
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="doc-category">分类</label>
-                  <select
-                    id="doc-category"
-                    value={draft.category}
-                    onChange={(event) =>
-                      update(
-                        "category",
-                        event.target.value as DocumentInput["category"],
-                      )
-                    }
-                  >
-                    {CATEGORIES.map((category) => (
-                      <option key={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className={isHealthRecord ? "health-tags-row" : "field-row"}>
+                {!isHealthRecord && (
+                  <div className="field">
+                    <label htmlFor="doc-category">分类</label>
+                    <select
+                      id="doc-category"
+                      value={draft.category}
+                      onChange={(event) =>
+                        update(
+                          "category",
+                          event.target.value as DocumentInput["category"],
+                        )
+                      }
+                    >
+                      {CATEGORIES.map((category) => (
+                        <option key={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="field tags-field">
                   <label htmlFor="doc-tags">
                     标签 <span className="optional">选填</span>
@@ -634,12 +670,17 @@ export function DocumentDialog(props: Props) {
               </div>
               <div className="field">
                 <label htmlFor="doc-source">
-                  来源 <span className="optional">选填</span>
+                  {isHealthRecord ? "原件来源" : "来源"}{" "}
+                  <span className="optional">选填</span>
                 </label>
                 <input
                   id="doc-source"
                   maxLength={500}
-                  placeholder="例如：家人分享、说明书，或原文链接"
+                  placeholder={
+                    isHealthRecord
+                      ? "例如：医院纸质病历、电子报告、处方照片"
+                      : "例如：家人分享、说明书，或原文链接"
+                  }
                   value={draft.source}
                   onChange={(event) => update("source", event.target.value)}
                 />
@@ -683,7 +724,7 @@ export function DocumentDialog(props: Props) {
                 ) : (
                   <>
                     <Icon name="check" size={16} />
-                    保存资料
+                    保存{recordLabel}
                   </>
                 )}
               </button>
@@ -751,14 +792,14 @@ export function DocumentDialog(props: Props) {
               <div className="detail-source">
                 <Icon name="link" size={16} />
                 <div>
-                  <span>资料来源</span>
+                  <span>{isHealthRecord ? "原件来源" : "资料来源"}</span>
                   <p>{draft.source}</p>
                 </div>
               </div>
             )}
             <p className="created-date">
               {props.mode === "view" &&
-                `收藏于 ${fullDate(props.document.createdAt)}`}
+                `${isHealthRecord ? "记录创建于" : "收藏于"} ${fullDate(props.document.createdAt)}`}
             </p>
             {error && (
               <p ref={errorRef} className="inline-error" role="alert">
@@ -771,10 +812,11 @@ export function DocumentDialog(props: Props) {
                 className="delete-confirm"
                 role="alert"
               >
-                <h4>确定删除这条资料？</h4>
+                <h4>确定删除这条{recordLabel}？</h4>
                 <p>
                   「{draft.title}
-                  」及其原文件将从资料库移除，删除后无法在应用内恢复。
+                  」及其原文件将从{isHealthRecord ? "健康档案" : "资料库"}
+                  移除，删除后无法在应用内恢复。
                 </p>
                 <div>
                   <button
@@ -782,7 +824,7 @@ export function DocumentDialog(props: Props) {
                     disabled={saving}
                     onClick={() => setDeleteConfirm(false)}
                   >
-                    保留资料
+                    保留{recordLabel}
                   </button>
                   <button
                     className="button danger small"
@@ -802,7 +844,7 @@ export function DocumentDialog(props: Props) {
               onClick={() => setDeleteConfirm(true)}
             >
               <Icon name="trash" size={16} />
-              删除资料
+              删除{recordLabel}
             </button>
             <button
               className="button primary"
@@ -814,7 +856,7 @@ export function DocumentDialog(props: Props) {
               }}
             >
               <Icon name="edit" size={16} />
-              编辑资料
+              编辑{recordLabel}
             </button>
           </div>
         </>
