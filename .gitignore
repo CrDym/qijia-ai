@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+coverage/
+data/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+output/
+.playwright-cli/
