@@ -27,7 +27,11 @@ import {
 import { ImageAnalysisPanel, ImagePreview } from "./image-analysis";
 
 type Props = (
-  | { mode: "create"; initial?: Partial<DocumentInput> }
+  | {
+      mode: "create";
+      initial?: Partial<DocumentInput>;
+      initialFile?: File | null;
+    }
   | { mode: "view"; document: FamilyDocument }
 ) & {
   aiConfigured: boolean;
@@ -70,7 +74,9 @@ export function DocumentDialog(props: Props) {
   const [saving, setSaving] = useState(false);
   const [organizing, setOrganizing] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(
+    props.mode === "create" ? (props.initialFile ?? null) : null,
+  );
   const [attachmentRemoved, setAttachmentRemoved] = useState(false);
   const existingAttachment =
     props.mode === "view" ? props.document.attachment : null;
@@ -97,7 +103,9 @@ export function DocumentDialog(props: Props) {
   const requestRef = useRef<AbortController | null>(null);
   const dirty =
     editing &&
-    (selectedFile !== null ||
+    ((props.mode === "create" &&
+      Boolean(draft.content.trim() || draft.title.trim())) ||
+      selectedFile !== null ||
       attachmentRemoved ||
       JSON.stringify(draft) !== JSON.stringify(baseline) ||
       tagsText !== baseline.tags.join("，"));

@@ -11,6 +11,7 @@ import {
 } from "@/schemas/document";
 import { Icon } from "./icon";
 import { DocumentDialog } from "./document-dialog";
+import { CaptureDialog } from "./capture-dialog";
 import { CATEGORY_META } from "./categories";
 import { apiRequest } from "@/lib/client";
 
@@ -123,6 +124,10 @@ export function KnowledgeWorkspace({
     window.setTimeout(() => triggerRef.current?.focus(), 0);
   }, []);
   function onChanged(message: string) {
+    if (dialog?.mode === "create") {
+      setCategory("all");
+      setQuery("");
+    }
     setRevision((value) => value + 1);
     setToast(message);
     closeDialog();
@@ -473,7 +478,7 @@ export function KnowledgeWorkspace({
             <section className="inspiration">
               <div className="inspiration-heading">
                 <h2>不知道从哪里开始？</h2>
-                <p>选一种资料，记录生活里值得留下的信息。</p>
+                <p>这些都可以直接收藏，分类交给 AI。</p>
               </div>
               <div className="inspiration-grid">
                 {CATEGORIES.map((item) => (
@@ -504,14 +509,23 @@ export function KnowledgeWorkspace({
           </footer>
         </main>
       </div>
-      {dialog && (
-        <DocumentDialog
-          key={dialog.mode === "view" ? dialog.document.id : "create"}
-          {...dialog}
+      {dialog?.mode === "create" ? (
+        <CaptureDialog
+          initial={dialog.initial}
           aiConfigured={aiConfigured}
           onClose={closeDialog}
           onChanged={onChanged}
         />
+      ) : (
+        dialog && (
+          <DocumentDialog
+            key={dialog.mode === "view" ? dialog.document.id : "create"}
+            {...dialog}
+            aiConfigured={aiConfigured}
+            onClose={closeDialog}
+            onChanged={onChanged}
+          />
+        )
       )}
       {toast && (
         <div className="toast" role="status">

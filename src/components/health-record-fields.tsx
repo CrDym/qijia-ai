@@ -26,7 +26,8 @@ export function HealthRecordBasics({
   value,
   onChange,
   disabled,
-}: HealthFieldProps) {
+  memberOnly = false,
+}: HealthFieldProps & { memberOnly?: boolean }) {
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -76,46 +77,51 @@ export function HealthRecordBasics({
             ))}
           </select>
         </div>
-        <div className="field">
-          <label htmlFor="health-type">记录类型</label>
-          <select
-            id="health-type"
-            value={value.recordType}
-            onChange={(event) =>
-              onChange({
-                ...value,
-                recordType: event.target.value as HealthRecord["recordType"],
-              })
-            }
-          >
-            {RECORD_TYPES.map((type) => (
-              <option key={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="health-date">记录日期</label>
-          <input
-            id="health-date"
-            type="date"
-            value={value.occurredOn}
-            onChange={(event) =>
-              onChange({ ...value, occurredOn: event.target.value })
-            }
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="health-hospital">就诊 / 检查机构</label>
-          <input
-            id="health-hospital"
-            maxLength={100}
-            value={value.hospital}
-            placeholder="例如：社区医院，未提供可留空"
-            onChange={(event) =>
-              onChange({ ...value, hospital: event.target.value })
-            }
-          />
-        </div>
+        {!memberOnly && (
+          <>
+            <div className="field">
+              <label htmlFor="health-type">记录类型</label>
+              <select
+                id="health-type"
+                value={value.recordType}
+                onChange={(event) =>
+                  onChange({
+                    ...value,
+                    recordType: event.target
+                      .value as HealthRecord["recordType"],
+                  })
+                }
+              >
+                {RECORD_TYPES.map((type) => (
+                  <option key={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="health-date">记录日期</label>
+              <input
+                id="health-date"
+                type="date"
+                value={value.occurredOn}
+                onChange={(event) =>
+                  onChange({ ...value, occurredOn: event.target.value })
+                }
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="health-hospital">就诊 / 检查机构</label>
+              <input
+                id="health-hospital"
+                maxLength={100}
+                value={value.hospital}
+                placeholder="例如：社区医院，未提供可留空"
+                onChange={(event) =>
+                  onChange({ ...value, hospital: event.target.value })
+                }
+              />
+            </div>
+          </>
+        )}
       </div>
       {error && (
         <p className="inline-error" role="alert">

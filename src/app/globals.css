@@ -896,6 +896,150 @@ h1 {
   background: #26372e66;
   backdrop-filter: blur(3px);
 }
+.capture-dialog {
+  width: 720px;
+}
+.capture-disclosure {
+  margin: -8px 0 16px;
+  color: #6f7d66;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.capture-input {
+  padding: 14px;
+  background: #fafcf6;
+  border: 1px dashed #c5d2ba;
+  border-radius: 10px;
+}
+.capture-input.dragging {
+  background: #edf4e5;
+  border-color: #608451;
+}
+.capture-input textarea {
+  min-height: 140px;
+}
+.capture-input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.capture-input-footer > span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.capture-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+.capture-file > div {
+  flex: 1;
+  min-width: 0;
+}
+.capture-file strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.capture-file p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+.capture-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f0f5e9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 22px;
+}
+.capture-progress strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.capture-progress p {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.capture-result {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #dde7d3;
+  border-radius: 10px;
+  background: #fcfef9;
+}
+.capture-result-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.capture-result-heading > span {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  color: #6a8757;
+}
+.capture-category {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 5px;
+  font-size: 10px;
+  color: #63814f;
+  background: #eaf1e1;
+}
+.capture-result h3 {
+  font-size: 18px;
+  margin: 13px 0 10px;
+  overflow-wrap: anywhere;
+}
+.capture-summary,
+.capture-health {
+  font-size: 12px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #67745c;
+}
+.capture-original {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.capture-original summary {
+  cursor: pointer;
+  color: #5f7850;
+}
+.capture-original textarea {
+  margin-top: 10px;
+}
+.capture-edit .field {
+  margin-top: 16px;
+}
+.capture-footer {
+  flex-wrap: wrap;
+}
+.capture-footer > .text-button {
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .capture-result {
+    padding: 14px;
+  }
+  .capture-input {
+    padding: 10px;
+  }
+  .capture-result-heading {
+    flex-wrap: wrap;
+  }
+}
 .dialog-header {
   display: flex;
   align-items: center;

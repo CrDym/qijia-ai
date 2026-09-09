@@ -6,7 +6,7 @@ import { validateFile } from "../files/validate-file.ts";
 import { isImageFile } from "../../schemas/attachment.ts";
 import { structuredWithOpenAI } from "./openai.ts";
 
-export async function analyzeImage(file: File) {
+export async function prepareImageInput(file: File) {
   if (!isImageFile(file.name))
     throw new AppError(
       "UNSUPPORTED_IMAGE",
@@ -25,6 +25,11 @@ export async function analyzeImage(file: File) {
     })
     .png()
     .toBuffer();
+  return `data:image/png;base64,${bytes.toString("base64")}`;
+}
+
+export async function analyzeImage(file: File) {
+  const imageURL = await prepareImageInput(file);
   return structuredWithOpenAI({
     schema: imageAnalysisSchema,
     name: "family_image_analysis",
@@ -43,7 +48,7 @@ title 为简短中文标题，content 为识别正文。无法辨认的部分用
           },
           {
             type: "input_image",
-            image_url: `data:image/png;base64,${bytes.toString("base64")}`,
+            image_url: imageURL,
             detail: "high",
           },
         ],
