@@ -16,10 +16,14 @@ export function AISettingsWorkspace({
   const [status, setStatus] = useState(initialStatus);
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState(initialStatus.model);
+  const [baseURL, setBaseURL] = useState(initialStatus.savedBaseURL);
   const [busy, setBusy] = useState<"save" | "test" | "reset" | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const dirty = Boolean(apiKey) || model !== status.model;
+  const dirty =
+    Boolean(apiKey) ||
+    model !== status.model ||
+    baseURL !== status.savedBaseURL;
 
   useEffect(() => {
     if (!dirty && !busy) return;
@@ -41,7 +45,7 @@ export function AISettingsWorkspace({
     if (
       action === "reset" &&
       !window.confirm(
-        "清除页面保存的密钥和模型设置？之后会使用环境变量；环境变量没有密钥时将停用 AI。",
+        "清除页面保存的 API 地址、密钥和模型设置？之后会使用环境变量；环境变量没有密钥时将停用 AI。",
       )
     )
       return;
@@ -59,12 +63,13 @@ export function AISettingsWorkspace({
         const result = await apiRequest<AISettingsStatus>("/api/settings/ai", {
           method: action === "save" ? "PUT" : "DELETE",
           ...(action === "save"
-            ? { body: JSON.stringify({ apiKey, model }) }
+            ? { body: JSON.stringify({ apiKey, model, baseURL }) }
             : {}),
         });
         setStatus(result);
         setApiKey("");
         setModel(result.model);
+        setBaseURL(result.savedBaseURL);
         setNotice(
           action === "save"
             ? "配置已保存并立即生效。可点击测试连接确认是否可用。"
@@ -175,8 +180,8 @@ export function AISettingsWorkspace({
                 <Icon name="sparkle" size={25} />
               </span>
               <div>
-                <h2 id="settings-title">OpenAI 配置</h2>
-                <p>一个设置，供所有 AI 功能使用。</p>
+                <h2 id="settings-title">OpenAI 兼容服务配置</h2>
+                <p>支持官方或兼容服务，供所有 AI 功能使用。</p>
               </div>
               <span
                 className={`settings-status ${status.configured ? "configured" : ""}`}
@@ -194,6 +199,46 @@ export function AISettingsWorkspace({
               <fieldset disabled={Boolean(busy)}>
                 <div className="field">
                   <div className="field-label">
+                    <label htmlFor="ai-base-url">API 地址（Base URL）</label>
+                    <span>选填</span>
+                  </div>
+                  <input
+                    id="ai-base-url"
+                    name="base-url"
+                    type="url"
+                    autoComplete="off"
+                    spellCheck={false}
+                    maxLength={2048}
+                    value={baseURL}
+                    placeholder={status.baseURL}
+                    aria-describedby="base-url-help base-url-status"
+                    onChange={(event) => {
+                      setBaseURL(event.target.value);
+                      setNotice("");
+                    }}
+                  />
+                  <p id="base-url-help" className="settings-help">
+                    填写服务商提供的 API 根地址，例如
+                    https://api.example.com/v1，不要追加 /responses 或
+                    /chat/completions。留空使用环境配置，未设置时使用官方地址。
+                  </p>
+                  <p id="base-url-status" className="settings-help">
+                    当前生效：{status.baseURL || "地址无效"}（
+                    {status.baseURLSource === "saved"
+                      ? "页面配置"
+                      : status.baseURLSource === "environment"
+                        ? "环境变量"
+                        : "官方默认"}
+                    ）。密钥和 AI 请求内容会发送至该地址，请使用对应服务的密钥。
+                  </p>
+                  {status.baseURLError && (
+                    <p className="inline-error" role="alert">
+                      {status.baseURLError}
+                    </p>
+                  )}
+                </div>
+                <div className="field">
+                  <div className="field-label">
                     <label htmlFor="ai-api-key">API Key</label>
                     <span>仅用于服务端调用</span>
                   </div>
@@ -208,7 +253,7 @@ export function AISettingsWorkspace({
                     placeholder={
                       status.configured
                         ? "已配置密钥；留空保留，输入新值替换"
-                        : "输入你的 OpenAI API Key"
+                        : "输入对应服务的 API Key"
                     }
                     aria-describedby="key-help"
                     onChange={(event) => {
@@ -246,9 +291,9 @@ export function AISettingsWorkspace({
                     }}
                   />
                   <p id="model-help" className="settings-help">
-                    沿用默认模型
-                    gpt-4.1-mini，或填写你有权限使用的模型。需支持图片输入、Responses
-                    API 和结构化输出。
+                    填写服务商提供的模型名称，官方默认 gpt-4.1-mini。服务需支持
+                    Responses API 和结构化输出，图片解析还需支持图片输入；仅支持
+                    Chat Completions 的服务暂不可用。
                   </p>
                 </div>
               </fieldset>

@@ -469,7 +469,8 @@ export function DocumentDialog(props: Props) {
             </div>
             {props.aiConfigured && (
               <p className="ai-disclosure">
-                点击整理时，正文将发送给 OpenAI。建议由你确认，原文会保留。
+                点击整理时，正文将发送给 AI
+                设置中配置的服务。建议由你确认，原文会保留。
               </p>
             )}
             {suggestion && (

@@ -38,7 +38,9 @@ export async function structuredWithOpenAI<T extends z.ZodType>({
   input: ResponseInput;
   maxTokens?: number;
 }): Promise<z.infer<T>> {
-  const { apiKey, model } = getAIConfiguration();
+  const { apiKey, model, baseURL, baseURLError } = getAIConfiguration();
+  if (baseURLError)
+    throw new AppError("AI_INVALID_BASE_URL", baseURLError, 503);
   if (!apiKey?.trim()) {
     throw new AppError(
       "AI_NOT_CONFIGURED",
@@ -46,7 +48,7 @@ export async function structuredWithOpenAI<T extends z.ZodType>({
       503,
     );
   }
-  const client = new OpenAI({ apiKey, timeout: 45000, maxRetries: 0 });
+  const client = new OpenAI({ apiKey, baseURL, timeout: 45000, maxRetries: 0 });
   try {
     const response = await client.responses.parse({
       model,
@@ -101,7 +103,7 @@ export async function structuredWithOpenAI<T extends z.ZodType>({
       if (error.status === 400 || error.status === 404)
         throw new AppError(
           "AI_MODEL_ERROR",
-          "模型不可用或不支持当前请求，请在 AI 设置中检查模型名称和访问权限",
+          "API 地址或模型不可用，请检查 AI 设置，并确认服务支持 Responses API 和结构化输出",
           502,
         );
       if (error.status === 429)

@@ -111,8 +111,8 @@ export function ImageAnalysisPanel({
         </button>
       </div>
       <p className="ai-disclosure">
-        点击解析会将这张图片发送给
-        OpenAI。健康图片仅识别记录内容，不能替代医生诊断，请核对药名、剂量和数值。
+        点击解析会将这张图片发送给 AI
+        设置中配置的服务。健康图片仅识别记录内容，不能替代医生诊断，请核对药名、剂量和数值。
       </p>
       {error && (
         <p className="inline-error" role="alert">

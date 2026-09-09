@@ -51,9 +51,29 @@ export function openDatabase(path: string): DatabaseSync {
     CREATE TABLE IF NOT EXISTS ai_settings (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       api_key TEXT NOT NULL DEFAULT '',
-      model TEXT NOT NULL
+      model TEXT NOT NULL,
+      base_url TEXT NOT NULL DEFAULT ''
     );
   `);
+  // 幂等升级已有设置表；写锁避免多个进程同时添加同一列。
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    if (
+      !db
+        .prepare("PRAGMA table_info(ai_settings)")
+        .all()
+        .some((column) => column.name === "base_url")
+    ) {
+      db.exec(
+        "ALTER TABLE ai_settings ADD COLUMN base_url TEXT NOT NULL DEFAULT ''",
+      );
+    }
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    db.close();
+    throw error;
+  }
   return db;
 }
 
