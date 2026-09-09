@@ -2,10 +2,12 @@
 
 [返回项目首页](../README.md)
 
-家庭 AI 平台的 V0：保存资料与原文件、用 AI 识别图片和整理内容、按成员管理家庭健康档案。
+家庭 AI 平台的 V0：通过一个输入入口，用 AI 整理资料、待办和生活清单；保存原文件，按成员管理家庭健康档案。
 
 ## 当前功能
 
+- 首页统一输入文字、图片或文件，AI 生成可分别修改、取消和确认保存的资料、待办、清单卡片。
+- 按北京时间归集首页事项，支持待办完成与重新打开、清单逐项勾选、编辑、来源查看和删除。
 - 新增、查看、编辑和删除资料，包含标题、原文、摘要、分类、标签及来源。
 - 点击或拖拽导入 PDF、Word（.docx）、TXT 和 Markdown，提取文字后可编辑；保存时保留可下载的原文件。
 - 资料库新增入口支持上传或粘贴 JPG/JPEG、PNG、WebP 静态图片，一次 AI 请求识别文字、提炼摘要并自动分类，对照原图核对后确认保存。
@@ -17,7 +19,7 @@
 - 粘贴原文或上传文件后，AI 自动生成完整草稿，无需选择分类或逐项采用；确认一次即可保存。文字与文件提取的原文由服务端保留，不让模型重写。
 - 桌面与手机布局、空状态、请求失败提示、未保存内容提醒、删除确认。
 
-本版不包含扫描 PDF 自动识别、向量检索、知识库问答、登录、成员账号/权限、健康指标趋势、提醒、Agent 或多模型路由。家庭成员是本机档案，不是登录账号。
+本版不包含扫描 PDF 自动识别、向量检索、知识库问答、登录、成员账号/权限、健康指标趋势、主动推送提醒、Agent 或多模型路由。家庭成员是本机档案，不是登录账号。
 
 ## 安装与启动
 
@@ -67,7 +69,37 @@ AI 使用 OpenAI Responses API 和严格 JSON Schema，再使用 Zod 校验返�
 
 资料库“新增资料”在粘贴原文或上传文件/图片后自动调用已配置的 AI 服务，产生 API 用量。文字输入停止约 1.2 秒后开始整理，中文输入法组词期间不触发；处理期间暂时锁定输入，失败不会循环自动重试。修改输入会使旧草稿失效并重新整理。手动表单与家庭健康专用表单仍只在点击 AI 按钮后调用；确认保存不会再次调用 AI。成员档案不会随 AI 请求发送，也不根据病历上的姓名自动归属成员。设置了 `store: false`，但这不等同于对供应商所有日志或留存政策的承诺。应用日志不打印正文、模型响应或密钥。
 
-## 使用方式
+## 今日生活与统一输入
+
+首页 `/` 是统一输入入口；家庭资料库移至 `/library`，家庭健康 `/health` 和 AI 设置 `/settings` 保持独立。
+
+1. 粘贴文字、截图，或选择 / 拖入一个文件。一次只处理一份原文或一个文件；文字停止输入约 1.2 秒、文件选择后自动整理，输入法组词期间不触发。页面会提示发送给当前 AI 服务并产生用量。
+2. AI 可生成一份资料、至多 8 个待办、至多 3 份清单，也可以说明需要补充内容。纯行动请求不必归档，同一份通知可以生成资料和待办。图片一次调用完成识别与整理，普通文件在本机提取文字后调用 AI。
+3. 每张卡片独立调整、取消或“确认保存”。健康资料需要核对所属成员和原文信息。失败保留卡片，单条失败不影响已保存记录；每张卡片带稳定编号，重试只返回已创建的记录，不重复创建或覆盖它。修改已保存内容请在事项或资料详情中编辑。
+4. 首页事项按“已逾期、今天、未来 7 天、未定日期、更晚的安排、已完成”展示。待办可完成与重新打开；清单可逐项勾选，也可整体完成或重新打开。编辑清单文字不会清除已有条目的勾选状态。每份清单最多 40 项，至少保留一项。
+5. 处理完后点击“继续输入下一件事”。也可清空尚未保存的建议重新输入，页面会要求确认。没有 AI 配置或调用失败时，可在下方手动添加待办、清单或资料。
+
+日期统一采用 **Asia/Shanghai（北京时间）**，按天归集，不受服务器时区影响。明确的“明天”等相对日期可按整理当天换算；只有月日、缺年份或其他不明确日期留空并提示核对，不默认今天。原文时刻保留在备注；当前不做定时推送、重复任务或日历同步。AI 返回符合格式的日期仍可能理解错误，请在保存前核对。
+
+事项保留输入来源、原文 / 图片转录和原文件，支持查看来源与下载。每条记录至多一个附件；同一文件确认成多张卡片会保存独立副本，便于单独管理。删除事项会连同该副本删除，不影响其他卡片。当前事项附件不支持替换，可删除事项重新添加。原始数据不会在生成草稿阶段写入数据库。
+
+首页不是知识库问答或自动执行 Agent。它不检索现有家庭资料，不会声称已发提醒或完成外部操作；查资料请进入资料库搜索。准备清单中的 AI 补充内容属于建议，不是预订记录、官方材料清单或医疗建议。
+
+相关接口：
+
+| 接口 | 用途 |
+| --- | --- |
+| `POST /api/home/prepare` | JSON `{content}` 或 multipart `file`，返回经过 schema 校验的草稿，不写入数据库 |
+| `POST /api/home/confirm` | JSON `{id, kind, data}` 或 multipart `card` JSON + `file`，确认一张资料 / 事项卡片，稳定 UUID 防重复 |
+| `GET /api/activities` | 查询已保存的待办与清单（包含来源文字，不包含附件二进制） |
+| `PUT /api/activities/[id]` | 修改名称、日期、备注与条目，保留来源与附件，类型不可改变 |
+| `PATCH /api/activities/[id]` | `{completed, itemId?}`，完成 / 重新打开整条事项或指定清单项 |
+| `DELETE /api/activities/[id]` | 删除事项及其原文件 |
+| `GET /api/activities/[id]/file` | 下载事项原文件 |
+
+写入接口检查来源、输入 schema、请求大小和附件内容。AI 调用继续集中在 `services/ai/prepare-home.ts`，输出契约在 `schemas/home.ts`，事项存储在 `repositories/activities.ts`。启动时幂等创建 `activities` 与 `activity_attachments` 表，保留已有资料、成员和设置。文字整理最多输出 8,000 token，图片 12,000 token；失败不会自动循环重试。
+
+## 资料库使用方式
 
 1. 在资料库点击“新增资料”，粘贴原文或截图，或选择/拖入一份文件。一次只提供一份原文或一个文件；选择文件会替换当前待整理输入。
 2. AI 自动识别内容、生成标题、摘要、标签并分类。无需选择分类，不受当前列表筛选类别影响。文字及 PDF/Word/TXT/Markdown 提取后只生成元信息；图片在一次请求中完成识别与整理。文件名保留为来源。
@@ -132,6 +164,9 @@ npm start
 ```text
 src/
   app/
+    api/home/prepare/          # 统一输入生成资料、待办和清单草稿
+    api/home/confirm/          # 单张卡片确认，稳定编号避免重复创建
+    api/activities/            # 事项查询、编辑、完成、删除与原文件下载
     api/documents/             # 列表、新增、单条读取/编辑/删除
     api/documents/prepare/     # 原文或文件自动生成待确认草稿，不写入资料库
     api/documents/[id]/file/   # 原文件下载
@@ -143,9 +178,15 @@ src/
     api/settings/ai/           # AI 配置状态、保存、恢复及 test/ 连接测试
     settings/page.tsx          # AI 设置入口
     health/page.tsx            # 家庭健康入口
-    page.tsx                  # 服务端页面，仅传递 AI 是否配置的布尔状态
-    layout.tsx / globals.css
+    library/page.tsx          # 家庭资料库入口
+    page.tsx                  # 今日生活首页，只传递配置状态和北京时间日期
+    layout.tsx / globals.css / home.css
   components/
+    home-workspace.tsx        # 今日事项与日期分组
+    home-composer.tsx         # 统一输入、自动整理与手动添加入口
+    home-draft-card.tsx       # 草稿编辑与独立确认
+    activity-card.tsx         # 已保存事项与清单勾选
+    activity-fields.tsx       # 共用事项编辑字段
     knowledge-workspace.tsx    # 列表、分类、搜索和空状态
     document-dialog.tsx       # 详情、编辑与 AI 建议确认
     capture-dialog.tsx        # 粘贴/上传后自动整理、预览与一次确认保存
@@ -157,19 +198,24 @@ src/
     health-record-fields.tsx  # 健康字段编辑和详情
     categories.ts / icon.tsx
   schemas/document.ts         # 文档与 AI 结果数据契约
+  schemas/home.ts             # 统一 AI 输出与确认卡片契约
+  schemas/activity.ts         # 事项、条目与状态更新契约
   schemas/capture.ts          # 自动分类、图片正文及健康草稿契约
   schemas/attachment.ts       # 文件类型、大小限制与元数据
   schemas/health.ts           # 成员、健康记录与健康 AI 输出契约
   schemas/image.ts            # 图片 AI 输出契约
   schemas/ai-settings.ts      # AI 设置输入与公开状态契约
   repositories/documents.ts   # SQLite 查询与持久化
+  repositories/activities.ts  # 事项与附件的事务持久化
   repositories/members.ts     # 成员持久化与删除约束
   repositories/ai-settings.ts # 服务端密钥和模型持久化
   lib/database.ts             # 数据库连接与首次建表
+  lib/dates.ts                # 北京时间日期与事项分组
   lib/api.ts / client.ts      # 请求校验、错误响应与客户端请求
   services/ai/
     organize-document.ts     # 稳定的业务入口
     prepare-document.ts      # 原文/文件/图片自动分类和完整草稿生成
+    prepare-home.ts          # 统一输入的意图整理与多卡片草稿
     analyze-image.ts         # 图片输入预处理与识别
     organize-health.ts       # 健康资料整理
     run-exclusive.ts         # 各 AI 入口共享的单进程并发保护

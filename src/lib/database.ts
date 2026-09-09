@@ -54,6 +54,27 @@ export function openDatabase(path: string): DatabaseSync {
       model TEXT NOT NULL,
       base_url TEXT NOT NULL DEFAULT ''
     );
+    CREATE TABLE IF NOT EXISTS activities (
+      id TEXT PRIMARY KEY,
+      kind TEXT NOT NULL CHECK (kind IN ('todo', 'checklist')),
+      title TEXT NOT NULL,
+      notes TEXT NOT NULL DEFAULT '',
+      due_on TEXT NOT NULL DEFAULT '',
+      items TEXT NOT NULL DEFAULT '[]',
+      completed INTEGER NOT NULL DEFAULT 0,
+      source TEXT NOT NULL DEFAULT '',
+      source_content TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS activities_due ON activities(completed, due_on);
+    CREATE TABLE IF NOT EXISTS activity_attachments (
+      activity_id TEXT PRIMARY KEY REFERENCES activities(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      data BLOB NOT NULL
+    );
   `);
   // 幂等升级已有设置表；写锁避免多个进程同时添加同一列。
   db.exec("BEGIN IMMEDIATE");

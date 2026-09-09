@@ -138,6 +138,10 @@ export function HealthWorkspace({ aiConfigured }: { aiConfigured: boolean }) {
         <nav aria-label="家庭工具">
           <p className="nav-caption">家庭工作台</p>
           <Link className="nav-item" href="/">
+            <Icon name="home" />
+            <span>今日生活</span>
+          </Link>
+          <Link className="nav-item" href="/library">
             <Icon name="library" />
             <span>家庭资料库</span>
           </Link>
@@ -174,7 +178,8 @@ export function HealthWorkspace({ aiConfigured }: { aiConfigured: boolean }) {
         </header>
         <main className="main-content">
           <div className="workspace-tabs">
-            <Link href="/">家庭资料库</Link>
+            <Link href="/">今日生活</Link>
+            <Link href="/library">家庭资料库</Link>
             <Link href="/health" aria-current="page">
               家庭健康 <Icon name="heart" size={14} />
             </Link>

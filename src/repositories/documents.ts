@@ -165,9 +165,12 @@ export function createDocumentRepository(db: DatabaseSync) {
     create(
       input: DocumentInput,
       attachment?: AttachmentData | null,
+      id: string = randomUUID(),
     ): FamilyDocument {
       return transaction(() => {
-        const id = randomUUID();
+        // 首页卡片携带稳定编号，响应丢失后重试不会重复创建。
+        const existing = this.find(id);
+        if (existing) return existing;
         const now = new Date().toISOString();
         db.prepare(
           `INSERT INTO documents (id, title, content, summary, category, tags, source, created_at, updated_at)

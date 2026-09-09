@@ -108,6 +108,10 @@ export function AISettingsWorkspace({
         <nav aria-label="家庭工具">
           <p className="nav-caption">家庭工作台</p>
           <Link className="nav-item" href="/" onClick={guardNavigation}>
+            <Icon name="home" />
+            <span>今日生活</span>
+          </Link>
+          <Link className="nav-item" href="/library" onClick={guardNavigation}>
             <Icon name="library" />
             <span>家庭资料库</span>
           </Link>
@@ -150,6 +154,9 @@ export function AISettingsWorkspace({
         <main className="main-content">
           <div className="workspace-tabs">
             <Link href="/" onClick={guardNavigation}>
+              今日生活
+            </Link>
+            <Link href="/library" onClick={guardNavigation}>
               家庭资料库
             </Link>
             <Link href="/health" onClick={guardNavigation}>
