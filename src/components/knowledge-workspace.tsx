@@ -163,6 +163,10 @@ export function KnowledgeWorkspace({
             <span>家庭健康</span>
             <Icon name="chevron" size={14} />
           </Link>
+          <Link className="nav-item" href="/dance">
+            <Icon name="video" />
+            <span>街舞成长册</span>
+          </Link>
           <p className="nav-caption">我的资料</p>
           <button
             className={`nav-item ${category === "all" ? "active" : ""}`}
@@ -229,6 +233,7 @@ export function KnowledgeWorkspace({
               家庭健康 <Icon name="heart" size={14} />
             </Link>
             <Link href="/settings">AI 设置</Link>
+            <Link href="/dance">街舞成长册</Link>
           </div>
           <section className="page-heading">
             <div>

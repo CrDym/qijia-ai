@@ -128,6 +128,10 @@ export function AISettingsWorkspace({
             <Icon name="settings" />
             <span>AI 设置</span>
           </Link>
+          <Link className="nav-item" href="/dance" onClick={guardNavigation}>
+            <Icon name="video" />
+            <span>街舞成长册</span>
+          </Link>
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-note">
@@ -168,6 +172,9 @@ export function AISettingsWorkspace({
               onClick={guardNavigation}
             >
               AI 设置
+            </Link>
+            <Link href="/dance" onClick={guardNavigation}>
+              街舞成长册
             </Link>
           </div>
           <section className="page-heading">

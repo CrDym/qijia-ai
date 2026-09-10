@@ -11,6 +11,15 @@ export function openDatabase(path: string): DatabaseSync {
     PRAGMA foreign_keys = ON;
     PRAGMA journal_mode = WAL;
     PRAGMA busy_timeout = 5000;
+    CREATE TABLE IF NOT EXISTS dance_videos (
+      id TEXT PRIMARY KEY,
+      date TEXT NOT NULL,
+      kind TEXT NOT NULL CHECK (kind IN ('showcase', 'practice')),
+      name TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS dance_videos_date ON dance_videos(date DESC);
     CREATE TABLE IF NOT EXISTS documents (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,

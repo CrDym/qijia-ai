@@ -12,6 +12,7 @@ const links: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "今日生活", icon: "home" },
   { href: "/library", label: "家庭资料库", icon: "library" },
   { href: "/health", label: "家庭健康", icon: "heart" },
+  { href: "/dance", label: "街舞成长册", icon: "video" },
   { href: "/settings", label: "AI 设置", icon: "settings" },
 ];
 const groups = [

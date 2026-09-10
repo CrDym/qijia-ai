@@ -1,0 +1,312 @@
+.dance-content {
+  max-width: 1440px;
+  margin: auto;
+}
+.dance-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin: 26px 0 36px;
+}
+.dance-heading h1 {
+  font-size: 32px;
+  margin: 8px 0 12px;
+  letter-spacing: -1px;
+}
+.dance-heading p {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+.dance-heading .dance-eyebrow {
+  color: var(--green);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.dance-upload-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dance-content button,
+.dance-dialog button {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--ink);
+  padding: 9px 14px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.dance-content button:hover,
+.dance-dialog button:hover {
+  background: #edf2e9;
+}
+.dance-content .dance-primary,
+.dance-dialog .dance-primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+.dance-filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+}
+.dance-filters > div {
+  display: flex;
+  gap: 5px;
+  margin-right: auto;
+}
+.dance-filters button[aria-pressed="true"] {
+  background: #e5eddf;
+  color: var(--green);
+  border-color: #c9d8c4;
+}
+.dance-content input,
+.dance-content select,
+.dance-dialog input:not([type="file"]),
+.dance-dialog select {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: white;
+  max-width: 100%;
+}
+.dance-group {
+  margin-top: 30px;
+}
+.dance-group > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.dance-group h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.dance-group small {
+  color: var(--muted);
+}
+.dance-group > header button {
+  margin-left: auto;
+  font-size: 12px;
+}
+.dance-badge {
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  background: #e8eddf;
+  color: #506e39;
+}
+.dance-badge.practice {
+  background: #f5eadd;
+  color: #91602c;
+}
+.dance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.dance-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 0;
+}
+.dance-card video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #202820;
+  object-fit: contain;
+}
+.dance-card-info {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 14px 14px 8px;
+}
+.dance-card-info span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dance-card-info small {
+  white-space: nowrap;
+  color: var(--muted);
+}
+.dance-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+.dance-card-actions label {
+  margin-right: auto;
+  font-size: 12px;
+}
+.dance-card-actions button {
+  border: 0;
+  font-size: 12px;
+  padding: 6px;
+}
+.dance-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--muted);
+}
+.dance-empty svg {
+  margin: 0 auto;
+  color: #80956b;
+}
+.dance-empty h2 {
+  color: var(--ink);
+  font-size: 20px;
+}
+.dance-footer {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 40px;
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+  line-height: 1.8;
+}
+.dance-footer span {
+  display: block;
+}
+.dance-error {
+  color: #a33b32;
+  background: #fff1ed;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.dance-notice {
+  color: var(--green);
+  background: #eaf0e4;
+  border-radius: 8px;
+  padding: 12px;
+}
+.dance-dialog {
+  margin: auto;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 26px;
+  width: min(540px, calc(100% - 28px));
+  max-height: 90dvh;
+  color: var(--ink);
+  box-shadow: 0 24px 80px #0003;
+}
+.dance-dialog::backdrop {
+  background: #1d2d2666;
+}
+.dance-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.dance-dialog h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.dance-dialog fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.dance-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.dance-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.dance-drop {
+  margin-top: 20px;
+  padding: 24px 16px;
+  border: 1px dashed #adc2a5;
+  border-radius: 12px;
+  background: #f6f8f1;
+  text-align: center;
+}
+.dance-drop svg {
+  margin: auto;
+}
+.dance-drop input {
+  display: block;
+  max-width: 100%;
+  margin: 16px auto;
+}
+.dance-drop small,
+.dance-dialog small {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.dance-file-list {
+  padding: 0;
+  list-style: none;
+  max-height: 180px;
+  overflow: auto;
+}
+.dance-file-list li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+.dance-file-list span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.dance-file-list button {
+  flex-shrink: 0;
+}
+.dance-dialog progress {
+  width: 100%;
+  accent-color: var(--green);
+}
+.dance-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+@media (max-width: 1200px) {
+  .dance-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dance-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 600px) {
+  .dance-grid {
+    grid-template-columns: 1fr;
+  }
+  .dance-heading h1 {
+    font-size: 28px;
+  }
+  .dance-fields {
+    grid-template-columns: 1fr;
+  }
+  .dance-dialog {
+    padding: 20px;
+  }
+}

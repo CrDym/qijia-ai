@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 const paths = {
+  video: "M3 5h12v14H3zM15 10l6-4v12l-6-4Z",
   settings: "M4 7h16M4 17h16M9 4v6M15 14v6",
   heart:
     "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z",
