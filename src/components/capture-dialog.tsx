@@ -1,4 +1,5 @@
 "use client";
+import { useConfirmation } from "./confirmation-provider";
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ClipboardEvent } from "react";
@@ -211,9 +212,10 @@ function AutomaticCapture({
     }
   }
 
-  function close() {
+  const confirm = useConfirmation();
+  async function close() {
     if (saving || manualPreparing) return;
-    if (hasInput && !window.confirm("这条资料尚未保存，确定放弃并关闭吗？"))
+    if (hasInput && !(await confirm("这条资料尚未保存，确定放弃并关闭吗？")))
       return;
     onClose();
   }

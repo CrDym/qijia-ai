@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./home.css";
+import "./confirmation.css";
+import { ConfirmationProvider } from "@/components/confirmation-provider";
 
 export const metadata: Metadata = {
   title: "栖家 · 家庭 AI 平台",
@@ -13,7 +15,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <ConfirmationProvider>{children}</ConfirmationProvider>
+      </body>
     </html>
   );
 }

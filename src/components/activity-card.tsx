@@ -8,6 +8,7 @@ import {
 } from "@/schemas/activity";
 import { ActivityFields } from "./activity-fields";
 import { Icon } from "./icon";
+import { useConfirmation } from "./confirmation-provider";
 
 export function ActivityCard({
   activity,
@@ -22,6 +23,7 @@ export function ActivityCard({
   onUpdated: (value: Activity) => void;
   onRemoved: () => void;
 }) {
+  const confirm = useConfirmation();
   const [draft, setDraft] = useState<Fields>({
     kind: activity.kind,
     title: activity.title,
@@ -78,7 +80,7 @@ export function ActivityCard({
     }
     void mutate("PUT", result.data);
   }
-  function cancelEdit() {
+  async function cancelEdit() {
     if (
       JSON.stringify(draft) !==
         JSON.stringify({
@@ -88,7 +90,7 @@ export function ActivityCard({
           dueOn: activity.dueOn,
           items: activity.items,
         }) &&
-      !window.confirm("放弃这条事项尚未保存的修改吗？")
+      !(await confirm("放弃这条事项尚未保存的修改吗？"))
     )
       return;
     onEdit(false);
@@ -202,10 +204,15 @@ export function ActivityCard({
             <button
               className="text-button"
               disabled={busy}
-              onClick={() => {
+              onClick={async () => {
                 if (
-                  window.confirm(
+                  await confirm(
                     `删除“${activity.title}”？原文件也会删除，此操作无法撤销。`,
+                    {
+                      title: "删除这条事项？",
+                      confirmLabel: "删除事项",
+                      danger: true,
+                    },
                   )
                 )
                   void mutate("DELETE");

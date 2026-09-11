@@ -15,6 +15,7 @@ import { HomeDraftCard, type HomeCard } from "./home-draft-card";
 import { DocumentDialog } from "./document-dialog";
 import { ImagePreview } from "./image-analysis";
 import { Icon } from "./icon";
+import { useConfirmation } from "./confirmation-provider";
 
 function resultCards(result: HomeResult): HomeCard[] {
   return [
@@ -74,6 +75,7 @@ export function HomeComposer({
   onSaved: () => void;
   onDirtyChange: (value: boolean) => void;
 }) {
+  const confirm = useConfirmation();
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<HomeResult | null>(null);
@@ -168,7 +170,7 @@ export function HomeComposer({
     retry,
   ]);
 
-  function selectFile(files: File[]) {
+  async function selectFile(files: File[]) {
     if (locked) return;
     if (files.length !== 1) {
       setError("请一次上传一个文件");
@@ -185,20 +187,24 @@ export function HomeComposer({
     }
     if (
       content.trim() &&
-      !window.confirm("上传文件将替换当前输入的文字，继续吗？")
+      !(await confirm("上传文件将替换当前输入的文字，继续吗？", {
+        title: "替换当前输入？",
+        confirmLabel: "替换输入",
+      }))
     )
       return;
     setContent("");
     setFile(selected);
     setError("");
   }
-  function reset() {
+  async function reset() {
     if (busy || savingCount) return;
     if (
       dirty &&
-      !window.confirm(
+      !(await confirm(
         "还有未保存的输入或建议，清空并继续吗？已保存的记录不受影响。",
-      )
+        { title: "清空未保存的内容？", confirmLabel: "清空内容" },
+      ))
     )
       return;
     setContent("");

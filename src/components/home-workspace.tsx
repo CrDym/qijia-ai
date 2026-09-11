@@ -1,4 +1,6 @@
 "use client";
+import { useRouter } from "next/navigation";
+import { useConfirmation } from "./confirmation-provider";
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { apiRequest } from "@/lib/client";
@@ -35,6 +37,8 @@ export function HomeWorkspace({
   aiConfigured: boolean;
   initialToday: string;
 }) {
+  const confirm = useConfirmation();
+  const router = useRouter();
   const [today, setToday] = useState(initialToday);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,14 +87,22 @@ export function HomeWorkspace({
     const timer = window.setTimeout(() => setToast(""), 4000);
     return () => window.clearTimeout(timer);
   }, [toast]);
-  function guardNavigation(event: MouseEvent<HTMLAnchorElement>) {
+  async function guardNavigation(event: MouseEvent<HTMLAnchorElement>) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
+    if (!dirty) return;
+    event.preventDefault();
+    const href = (event.target as HTMLElement)
+      .closest("a")
+      ?.getAttribute("href");
     if (
-      dirty &&
-      !window.confirm("还有未保存的内容，离开将丢失这些修改。确定离开吗？")
+      href &&
+      (await confirm("还有未保存的内容，离开将丢失这些修改。", {
+        title: "离开当前页面？",
+        confirmLabel: "放弃并离开",
+      }))
     )
-      event.preventDefault();
+      router.push(href);
   }
   const saved = useCallback(() => {
     setRevision((value) => value + 1);
@@ -280,14 +292,18 @@ export function HomeWorkspace({
                             key={activity.id}
                             activity={activity}
                             editing={editingId === activity.id}
-                            onEdit={(value) => {
+                            onEdit={async (value) => {
                               if (
                                 value &&
                                 editingId &&
                                 editingId !== activity.id &&
-                                !window.confirm(
+                                !(await confirm(
                                   "切换编辑会放弃另一条事项的未保存修改，继续吗？",
-                                )
+                                  {
+                                    title: "切换编辑的事项？",
+                                    confirmLabel: "放弃并切换",
+                                  },
+                                ))
                               )
                                 return;
                               setEditingId((current) =>

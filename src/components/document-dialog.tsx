@@ -1,4 +1,5 @@
 "use client";
+import { useConfirmation } from "./confirmation-provider";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -94,12 +95,10 @@ export function DocumentDialog(props: Props) {
     useState<HealthOrganization | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [discardConfirm, setDiscardConfirm] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const confirm = useConfirmation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
-  const deleteConfirmationRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<AbortController | null>(null);
   const dirty =
     editing &&
@@ -112,11 +111,14 @@ export function DocumentDialog(props: Props) {
   const busy = saving || organizing || importing;
   const { onClose } = props;
 
-  const requestClose = useCallback(() => {
+  const requestClose = useCallback(async () => {
     if (busy) return;
-    if (dirty) setDiscardConfirm(true);
-    else onClose();
-  }, [busy, dirty, onClose]);
+    if (
+      !dirty ||
+      (await confirm("继续编辑可以保留这次输入，直接离开会放弃修改。"))
+    )
+      onClose();
+  }, [busy, dirty, onClose, confirm]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -142,9 +144,6 @@ export function DocumentDialog(props: Props) {
   useEffect(() => {
     errorRef.current?.scrollIntoView({ block: "nearest" });
   }, [error]);
-  useEffect(() => {
-    deleteConfirmationRef.current?.scrollIntoView({ block: "nearest" });
-  }, [deleteConfirm]);
 
   function update<K extends keyof DocumentInput>(
     key: K,
@@ -342,26 +341,7 @@ export function DocumentDialog(props: Props) {
         </button>
       </div>
 
-      {discardConfirm ? (
-        <div className="confirmation-panel" role="alert">
-          <span className="empty-icon">
-            <Icon name="file" size={26} />
-          </span>
-          <h3>还有尚未保存的内容</h3>
-          <p>继续编辑可以保留这次输入，直接离开会放弃修改。</p>
-          <div>
-            <button
-              className="button secondary"
-              onClick={() => setDiscardConfirm(false)}
-            >
-              继续编辑
-            </button>
-            <button className="button danger" onClick={onClose}>
-              放弃修改并关闭
-            </button>
-          </div>
-        </div>
-      ) : editing ? (
+      {editing ? (
         <form onSubmit={save} className="document-form">
           <div className="dialog-body">
             <p className="form-intro">
@@ -815,42 +795,24 @@ export function DocumentDialog(props: Props) {
                 {error}
               </p>
             )}
-            {deleteConfirm && (
-              <div
-                ref={deleteConfirmationRef}
-                className="delete-confirm"
-                role="alert"
-              >
-                <h4>确定删除这条{recordLabel}？</h4>
-                <p>
-                  「{draft.title}
-                  」及其原文件将从{isHealthRecord ? "健康档案" : "资料库"}
-                  移除，删除后无法在应用内恢复。
-                </p>
-                <div>
-                  <button
-                    className="button secondary small"
-                    disabled={saving}
-                    onClick={() => setDeleteConfirm(false)}
-                  >
-                    保留{recordLabel}
-                  </button>
-                  <button
-                    className="button danger small"
-                    disabled={saving}
-                    onClick={remove}
-                  >
-                    {saving ? "正在删除…" : "确认删除"}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
           <div className="dialog-footer">
             <button
               className="text-button delete-button"
               disabled={saving}
-              onClick={() => setDeleteConfirm(true)}
+              onClick={async () => {
+                if (
+                  await confirm(
+                    `「${draft.title}」及其原文件将被删除，无法在应用内恢复。`,
+                    {
+                      title: `删除这条${recordLabel}？`,
+                      confirmLabel: `删除${recordLabel}`,
+                      danger: true,
+                    },
+                  )
+                )
+                  await remove();
+              }}
             >
               <Icon name="trash" size={16} />
               删除{recordLabel}
@@ -860,7 +822,6 @@ export function DocumentDialog(props: Props) {
               disabled={saving}
               onClick={() => {
                 setEditing(true);
-                setDeleteConfirm(false);
                 setError("");
               }}
             >

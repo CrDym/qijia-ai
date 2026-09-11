@@ -6,6 +6,7 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { Icon } from "./icon";
 import { apiRequest } from "@/lib/client";
 import type { AISettingsStatus } from "@/schemas/ai-settings";
+import { useConfirmation } from "./confirmation-provider";
 
 export function AISettingsWorkspace({
   initialStatus,
@@ -13,6 +14,7 @@ export function AISettingsWorkspace({
   initialStatus: AISettingsStatus;
 }) {
   const router = useRouter();
+  const confirm = useConfirmation();
   const [status, setStatus] = useState(initialStatus);
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState(initialStatus.model);
@@ -35,18 +37,31 @@ export function AISettingsWorkspace({
     return () => window.removeEventListener("beforeunload", prevent);
   }, [dirty, busy]);
 
-  function guardNavigation(event: MouseEvent<HTMLAnchorElement>) {
-    if (busy || (dirty && !window.confirm("配置尚未保存，确定离开吗？")))
-      event.preventDefault();
+  async function guardNavigation(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
+    if (!busy && !dirty) return;
+    event.preventDefault();
+    if (busy) return;
+    const href = event.currentTarget.getAttribute("href");
+    if (
+      href &&
+      (await confirm("配置尚未保存，离开后将丢失当前修改。", {
+        title: "离开 AI 设置？",
+        confirmLabel: "放弃并离开",
+      }))
+    )
+      router.push(href);
   }
 
   async function act(action: "save" | "test" | "reset") {
     if (busy) return;
     if (
       action === "reset" &&
-      !window.confirm(
+      !(await confirm(
         "清除页面保存的 API 地址、密钥和模型设置？之后会使用环境变量；环境变量没有密钥时将停用 AI。",
-      )
+        { title: "恢复环境配置？", confirmLabel: "恢复配置", danger: true },
+      ))
     )
       return;
     setBusy(action);

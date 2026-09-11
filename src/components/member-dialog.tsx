@@ -1,4 +1,5 @@
 "use client";
+import { useConfirmation } from "./confirmation-provider";
 
 import { useEffect, useRef, useState } from "react";
 import { apiRequest } from "@/lib/client";
@@ -35,8 +36,7 @@ export function MemberDialog({
   );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [discard, setDiscard] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const confirm = useConfirmation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dirty =
     JSON.stringify(draft) !==
@@ -57,10 +57,10 @@ export function MemberDialog({
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty, busy]);
-  function close() {
+  async function close() {
     if (!busy) {
-      if (dirty) setDiscard(true);
-      else onClose();
+      if (!dirty || (await confirm("成员信息尚未保存，离开将放弃本次修改。")))
+        onClose();
     }
   }
   async function save(event: React.FormEvent) {
@@ -130,23 +130,7 @@ export function MemberDialog({
           <Icon name="close" />
         </button>
       </div>
-      {discard ? (
-        <div className="confirmation-panel">
-          <h3>还有尚未保存的成员信息</h3>
-          <p>离开将放弃本次修改。</p>
-          <div>
-            <button
-              className="button secondary"
-              onClick={() => setDiscard(false)}
-            >
-              继续编辑
-            </button>
-            <button className="button danger" onClick={onClose}>
-              放弃修改并关闭
-            </button>
-          </div>
-        </div>
-      ) : (
+      {
         <form className="document-form" onSubmit={save}>
           <div className="dialog-body">
             <p className="form-intro">
@@ -219,7 +203,19 @@ export function MemberDialog({
                   type="button"
                   className="text-button delete-button"
                   disabled={busy || member.recordCount > 0}
-                  onClick={() => setDeleteConfirm(true)}
+                  onClick={async () => {
+                    if (
+                      await confirm(
+                        `「${member.name}」的成员档案将被删除，无法在应用内恢复。其他成员不受影响。`,
+                        {
+                          title: "移除这位成员？",
+                          confirmLabel: "移除成员",
+                          danger: true,
+                        },
+                      )
+                    )
+                      await remove();
+                  }}
                 >
                   移除成员
                 </button>
@@ -228,30 +224,6 @@ export function MemberDialog({
                     ? `该成员有 ${member.recordCount} 条健康记录。请先转移或删除记录，再移除成员。`
                     : "移除成员不会影响其他家庭成员。"}
                 </p>
-              </div>
-            )}
-            {deleteConfirm && (
-              <div className="delete-confirm" role="alert">
-                <h4>确定移除「{member?.name}」？</h4>
-                <p>成员档案将被删除，无法在应用内恢复。</p>
-                <div>
-                  <button
-                    type="button"
-                    className="button secondary small"
-                    disabled={busy}
-                    onClick={() => setDeleteConfirm(false)}
-                  >
-                    保留成员
-                  </button>
-                  <button
-                    type="button"
-                    className="button danger small"
-                    disabled={busy}
-                    onClick={remove}
-                  >
-                    确认移除成员
-                  </button>
-                </div>
               </div>
             )}
             {error && (
@@ -277,7 +249,7 @@ export function MemberDialog({
             </div>
           </div>
         </form>
-      )}
+      }
     </dialog>
   );
 }

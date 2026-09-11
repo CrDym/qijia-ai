@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "./icon";
 import { homeToday } from "../lib/dates";
 import { formatBytes } from "../lib/format-bytes";
+import { useConfirmation } from "./confirmation-provider";
+import { deleteVideos } from "../lib/delete-videos";
 import {
   danceLabels,
   MAX_VIDEO_SIZE,
@@ -112,16 +114,34 @@ function VideoCard({
   onEdit,
   onDelete,
   disabled,
+  selecting,
+  selected,
+  onSelect,
 }: {
   video: DanceVideo;
   onEdit: () => void;
   onDelete: () => void;
   disabled: boolean;
+  selecting: boolean;
+  selected: boolean;
+  onSelect: () => void;
 }) {
   const player = useRef<HTMLVideoElement>(null);
   const [failed, setFailed] = useState(false);
   return (
-    <article className="dance-card">
+    <article className={`dance-card ${selected ? "dance-selected" : ""}`}>
+      {selecting && (
+        <label className="dance-select">
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={disabled}
+            onChange={onSelect}
+            aria-label={`选择 ${video.name}`}
+          />
+          <span>{selected ? "已选择" : "选择视频"}</span>
+        </label>
+      )}
       <video
         ref={player}
         controls
@@ -170,6 +190,9 @@ function VideoCard({
   );
 }
 export function DanceWorkspace() {
+  const confirm = useConfirmation();
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [videos, setVideos] = useState<DanceVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -185,6 +208,8 @@ export function DanceWorkspace() {
   const [formError, setFormError] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
   async function refresh() {
+    if (busy) return;
+    setSelectedIds([]);
     setLoading(true);
     setError("");
     try {
@@ -226,15 +251,25 @@ export function DanceWorkspace() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [busy, files.length]);
   function begin(input: DanceInput, video: DanceVideo | null = null) {
+    if (busy) return;
+    setSelectedIds([]);
+    setSelecting(false);
     setEditing(video);
     setFiles([]);
     setFormError("");
     setProgress(0);
     setForm(input);
   }
-  function close() {
+  async function close() {
     if (busy) return;
-    if (files.length && !window.confirm("视频尚未上传，确定关闭吗？")) return;
+    if (
+      files.length &&
+      !(await confirm("已选择的视频尚未上传，关闭后需要重新选择。", {
+        title: "放弃这次上传？",
+        confirmLabel: "放弃上传",
+      }))
+    )
+      return;
     setFiles([]);
     setForm(null);
   }
@@ -320,10 +355,12 @@ export function DanceWorkspace() {
     }
   }
   async function remove(video: DanceVideo) {
+    if (busy) return;
     if (
-      !window.confirm(
+      !(await confirm(
         `删除“${video.name}”？应用保存的视频副本将一并删除，无法撤销；导入前的原文件不受影响。`,
-      )
+        { title: "删除这段视频？", confirmLabel: "删除视频", danger: true },
+      ))
     )
       return;
     setBusy(true);
@@ -333,12 +370,53 @@ export function DanceWorkspace() {
         await fetch(`/api/dance/${video.id}`, { method: "DELETE" }),
       );
       setVideos((current) => current.filter((item) => item.id !== video.id));
+      setSelectedIds((current) => current.filter((id) => id !== video.id));
       setNotice("视频已删除");
     } catch (e) {
       setError(e instanceof Error ? e.message : "删除失败");
     } finally {
       setBusy(false);
     }
+  }
+  async function removeSelected() {
+    if (busy || !selectedIds.length) return;
+    const targets = videos.filter((video) => selectedIds.includes(video.id));
+    if (!targets.length) return;
+    if (
+      !(await confirm(
+        `已选择 ${targets.length} 段视频，共 ${formatBytes(targets.reduce((sum, video) => sum + video.size, 0))}。\n\n${targets
+          .slice(0, 5)
+          .map((video) => `${video.date} · ${video.name}`)
+          .join(
+            "\n",
+          )}${targets.length > 5 ? `\n以及另外 ${targets.length - 5} 段` : ""}\n\n将删除应用中的视频副本与封面，无法撤销。导入前的原文件不受影响。`,
+        {
+          title: `删除所选 ${targets.length} 段视频？`,
+          confirmLabel: "确认删除",
+          danger: true,
+        },
+      ))
+    )
+      return;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    const { removed, failure } = await deleteVideos(
+      targets.map((video) => video.id),
+    );
+    setVideos((current) =>
+      current.filter((video) => !removed.includes(video.id)),
+    );
+    setSelectedIds((current) => current.filter((id) => !removed.includes(id)));
+    if (failure)
+      setError(
+        `已删除 ${removed.length} 段，剩余 ${targets.length - removed.length} 段未确认删除。${failure}。请刷新列表核对后重试。`,
+      );
+    else {
+      setSelecting(false);
+      setNotice(`已删除 ${removed.length} 段视频及其封面，无法在应用内撤销`);
+    }
+    setBusy(false);
   }
   const groups = new Map<string, DanceVideo[]>();
   [...videos]
@@ -446,7 +524,11 @@ export function DanceWorkspace() {
                 <button
                   key={value}
                   aria-pressed={filter === value}
-                  onClick={() => setFilter(value)}
+                  disabled={busy}
+                  onClick={() => {
+                    setFilter(value);
+                    setSelectedIds([]);
+                  }}
                 >
                   {label}
                 </button>
@@ -456,12 +538,69 @@ export function DanceWorkspace() {
               月份{" "}
               <input
                 type="month"
+                disabled={busy}
                 value={month}
-                onChange={(e) => setMonth(e.target.value)}
+                onChange={(e) => {
+                  setMonth(e.target.value);
+                  setSelectedIds([]);
+                }}
               />
             </label>
-            {month && <button onClick={() => setMonth("")}>清除月份</button>}
+            {month && (
+              <button
+                disabled={busy}
+                onClick={() => {
+                  setMonth("");
+                  setSelectedIds([]);
+                }}
+              >
+                清除月份
+              </button>
+            )}
+            <button
+              disabled={busy || loading || !videos.length}
+              onClick={() => {
+                setSelecting((value) => !value);
+                setSelectedIds([]);
+              }}
+            >
+              {selecting ? "退出选择" : "批量管理"}
+            </button>
           </div>
+          {selecting && (
+            <div
+              className="dance-batch-bar"
+              role="region"
+              aria-label="批量管理"
+            >
+              <span>
+                已选 <strong>{selectedIds.length}</strong> 段视频
+              </span>
+              <button
+                disabled={busy || !groups.size}
+                onClick={() =>
+                  setSelectedIds(
+                    [...groups.values()].flat().map((video) => video.id),
+                  )
+                }
+              >
+                全选当前筛选
+              </button>
+              <button
+                disabled={busy || !selectedIds.length}
+                onClick={() => setSelectedIds([])}
+              >
+                清空选择
+              </button>
+              <button
+                className="dance-batch-delete"
+                disabled={busy || !selectedIds.length}
+                onClick={() => void removeSelected()}
+              >
+                {busy ? "正在删除…" : "删除所选"}
+              </button>
+            </div>
+          )}
           {notice && (
             <p role="status" className="dance-notice">
               {notice}
@@ -514,6 +653,15 @@ export function DanceWorkspace() {
                       key={video.id}
                       video={video}
                       disabled={busy}
+                      selecting={selecting}
+                      selected={selectedIds.includes(video.id)}
+                      onSelect={() =>
+                        setSelectedIds((current) =>
+                          current.includes(video.id)
+                            ? current.filter((id) => id !== video.id)
+                            : [...current, video.id],
+                        )
+                      }
                       onEdit={() =>
                         begin({ date: video.date, kind: video.kind }, video)
                       }
@@ -602,7 +750,9 @@ export function DanceWorkspace() {
                   >
                     <Icon name="upload" size={30} />
                     <p>点击选择视频，或将视频拖到这里</p>
-                    <span className="dance-file-button" aria-hidden="true">选择文件</span>
+                    <span className="dance-file-button" aria-hidden="true">
+                      选择文件
+                    </span>
                     <input
                       aria-label="选择视频"
                       type="file"
