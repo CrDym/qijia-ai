@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./icon";
 import { homeToday } from "../lib/dates";
+import { formatBytes } from "../lib/format-bytes";
 import {
   danceLabels,
   MAX_VIDEO_SIZE,
@@ -138,7 +139,7 @@ function VideoCard({
       )}
       <div className="dance-card-info">
         <span title={video.name}>{video.name}</span>
-        <small>{(video.size / 1024 / 1024).toFixed(1)} MB</small>
+        <small>{formatBytes(video.size)}</small>
       </div>
       <div className="dance-card-actions">
         <label>
@@ -525,11 +526,7 @@ export function DanceWorkspace() {
           )}
           <footer className="dance-footer">
             本地保存 · {videos.length} 段视频 · 共{" "}
-            {(
-              videos.reduce((sum, video) => sum + video.size, 0) /
-              1024 ** 3
-            ).toFixed(2)}{" "}
-            GB
+            {formatBytes(videos.reduce((sum, video) => sum + video.size, 0))}
             <span>
               备份时先停止应用，再复制数据库所在目录（默认 data，含视频）。
             </span>
