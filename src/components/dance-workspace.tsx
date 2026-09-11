@@ -239,7 +239,7 @@ export function DanceWorkspace() {
     setForm(null);
   }
   function selectFiles(selected: File[]) {
-    if (busy) return;
+    if (busy || selected.length === 0) return;
     if (
       selected.some(
         (file) =>
@@ -601,12 +601,14 @@ export function DanceWorkspace() {
                     }}
                   >
                     <Icon name="upload" size={30} />
-                    <p>将视频拖到这里，或选择文件</p>
+                    <p>点击选择视频，或将视频拖到这里</p>
+                    <span className="dance-file-button" aria-hidden="true">选择文件</span>
                     <input
                       aria-label="选择视频"
                       type="file"
                       accept=".mp4,video/mp4"
                       multiple
+                      disabled={busy}
                       onChange={(e) => {
                         selectFiles(Array.from(e.target.files || []));
                         e.target.value = "";

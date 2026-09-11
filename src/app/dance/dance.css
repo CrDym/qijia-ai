@@ -237,6 +237,7 @@
   min-width: 0;
 }
 .dance-drop {
+  position: relative;
   margin-top: 20px;
   padding: 24px 16px;
   border: 1px dashed #adc2a5;
@@ -248,9 +249,33 @@
   margin: auto;
 }
 .dance-drop input {
-  display: block;
-  max-width: 100%;
-  margin: 16px auto;
+  /* 直接点击原生控件，整块区域可选文件，无需脚本转发点击。 */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.dance-drop:focus-within {
+  outline: 3px solid #8bae94;
+  outline-offset: 3px;
+}
+.dance-drop:has(input:not(:disabled)):hover {
+  border-color: var(--green);
+  background: #eef3e7;
+}
+.dance-drop input:disabled {
+  cursor: not-allowed;
+}
+.dance-file-button {
+  display: table;
+  margin: 14px auto;
+  padding: 10px 22px;
+  border-radius: 7px;
+  background: var(--green);
+  color: white;
 }
 .dance-drop small,
 .dance-dialog small {
